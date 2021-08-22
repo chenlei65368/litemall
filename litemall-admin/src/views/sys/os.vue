@@ -3,23 +3,23 @@
 
     <!-- 查询和其他操作 -->
     <div class="filter-container">
-      <el-input v-model="listQuery.key" clearable class="filter-item" style="width: 200px;" placeholder="请输入对象KEY"/>
-      <el-input v-model="listQuery.name" clearable class="filter-item" style="width: 200px;" placeholder="请输入对象名称"/>
+      <el-input v-model="listQuery.key" clearable class="filter-item" style="width: 200px;" placeholder="请输入对象KEY" />
+      <el-input v-model="listQuery.name" clearable class="filter-item" style="width: 200px;" placeholder="请输入对象名称" />
       <el-button v-permission="['GET /admin/storage/list']" class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">查找</el-button>
       <el-button v-permission="['POST /admin/storage/create']" class="filter-item" type="primary" icon="el-icon-edit" @click="handleCreate">添加</el-button>
       <el-button :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">导出</el-button>
     </div>
 
     <!-- 查询结果 -->
-    <el-table v-loading="listLoading" :data="list" size="small" element-loading-text="正在查询中。。。" border fit highlight-current-row>
+    <el-table v-loading="listLoading" :data="list" element-loading-text="正在查询中。。。" border fit highlight-current-row>
 
-      <el-table-column align="center" label="对象KEY" prop="key"/>
+      <el-table-column align="center" label="对象KEY" prop="key" />
 
-      <el-table-column align="center" label="对象名称" prop="name"/>
+      <el-table-column align="center" label="对象名称" prop="name" />
 
-      <el-table-column align="center" label="对象类型" prop="type"/>
+      <el-table-column align="center" label="对象类型" prop="type" />
 
-      <el-table-column align="center" label="对象大小" prop="size"/>
+      <el-table-column align="center" label="对象大小" prop="size" />
 
       <el-table-column align="center" property="url" label="图片">
         <template slot-scope="scope">
@@ -27,7 +27,7 @@
         </template>
       </el-table-column>
 
-      <el-table-column align="center" label="图片链接" prop="url"/>
+      <el-table-column align="center" label="图片链接" prop="url" />
 
       <el-table-column align="center" label="操作" width="200" class-name="small-padding fixed-width">
         <template slot-scope="scope">
@@ -41,8 +41,8 @@
 
     <!-- 添加对话框 -->
     <el-dialog :visible.sync="createDialogVisible" title="上传对象">
-      <el-upload :show-file-list="false" :limit="1" :http-request="handleUpload" action="#" list-type="picture">
-        <el-button size="small" type="primary">点击上传</el-button>
+      <el-upload ref="upload" :show-file-list="false" :limit="1" :http-request="handleUpload" action="#" list-type="picture">
+        <el-button type="primary">点击上传</el-button>
       </el-upload>
     </el-dialog>
 
@@ -50,7 +50,7 @@
     <el-dialog :visible.sync="updateDialogVisible" title="修改对象名称">
       <el-form ref="dataForm" :rules="rules" :model="dataForm" status-icon label-position="left" label-width="100px" style="width: 400px; margin-left:50px;">
         <el-form-item label="对象名称" prop="name">
-          <el-input v-model="dataForm.name"/>
+          <el-input v-model="dataForm.name" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -101,7 +101,7 @@ export default {
     getList() {
       this.listLoading = true
       listStorage(this.listQuery).then(response => {
-        this.list = response.data.data.items
+        this.list = response.data.data.list
         this.total = response.data.data.total
         this.listLoading = false
       }).catch(() => {
@@ -124,6 +124,8 @@ export default {
       this.createDialogVisible = true
     },
     handleUpload(item) {
+      this.$refs.upload.clearFiles()
+
       const formData = new FormData()
       formData.append('file', item.file)
       createStorage(formData).then(response => {
@@ -175,8 +177,7 @@ export default {
           title: '成功',
           message: '删除成功'
         })
-        const index = this.list.indexOf(row)
-        this.list.splice(index, 1)
+        this.getList()
       }).catch(response => {
         this.$notify.error({
           title: '失败',

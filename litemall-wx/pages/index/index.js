@@ -53,7 +53,7 @@ Page({
     });
     util.request(api.GoodsCount).then(function (res) {
       that.setData({
-        goodsCount: res.data.goodsCount
+        goodsCount: res.data
       });
     });
   },
@@ -124,12 +124,6 @@ Page({
     // 页面关闭
   },
   getCoupon(e) {
-    if (!app.globalData.hasLogin) {
-      wx.navigateTo({
-        url: "/pages/auth/login/login"
-      });
-    }
-
     let couponId = e.currentTarget.dataset.index
     util.request(api.CouponReceive, {
       couponId: couponId

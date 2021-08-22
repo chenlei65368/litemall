@@ -7,8 +7,10 @@ import org.linlinjava.litemall.core.validator.Order;
 import org.linlinjava.litemall.core.validator.Sort;
 import org.linlinjava.litemall.db.domain.LitemallGoods;
 import org.linlinjava.litemall.db.domain.LitemallTopic;
+import org.linlinjava.litemall.db.service.LitemallCollectService;
 import org.linlinjava.litemall.db.service.LitemallGoodsService;
 import org.linlinjava.litemall.db.service.LitemallTopicService;
+import org.linlinjava.litemall.wx.annotation.LoginUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,25 +37,23 @@ public class WxTopicController {
     private LitemallTopicService topicService;
     @Autowired
     private LitemallGoodsService goodsService;
+	@Autowired
+	private LitemallCollectService collectService;
 
     /**
      * 专题列表
      *
      * @param page 分页页数
-     * @param size 分页大小
+     * @param limit 分页大小
      * @return 专题列表
      */
     @GetMapping("list")
     public Object list(@RequestParam(defaultValue = "1") Integer page,
-                       @RequestParam(defaultValue = "10") Integer size,
+                       @RequestParam(defaultValue = "10") Integer limit,
                        @Sort @RequestParam(defaultValue = "add_time") String sort,
                        @Order @RequestParam(defaultValue = "desc") String order) {
-        List<LitemallTopic> topicList = topicService.queryList(page, size, sort, order);
-        int total = topicService.queryTotal();
-        Map<String, Object> data = new HashMap<String, Object>();
-        data.put("data", topicList);
-        data.put("count", total);
-        return ResponseUtil.ok(data);
+        List<LitemallTopic> topicList = topicService.queryList(page, limit, sort, order);
+        return ResponseUtil.okList(topicList);
     }
 
     /**
@@ -63,18 +63,26 @@ public class WxTopicController {
      * @return 专题详情
      */
     @GetMapping("detail")
-    public Object detail(@NotNull Integer id) {
-        Map<String, Object> data = new HashMap<>();
+    public Object detail(@LoginUser Integer userId, @NotNull Integer id) {
         LitemallTopic topic = topicService.findById(id);
-        data.put("topic", topic);
         List<LitemallGoods> goods = new ArrayList<>();
         for (Integer i : topic.getGoods()) {
             LitemallGoods good = goodsService.findByIdVO(i);
             if (null != good)
                 goods.add(good);
         }
-        data.put("goods", goods);
-        return ResponseUtil.ok(data);
+        
+		// 用户收藏
+		int userHasCollect = 0;
+		if (userId != null) {
+			userHasCollect = collectService.count(userId, (byte)1, id);
+		}
+
+        Map<String, Object> entity = new HashMap<String, Object>();
+        entity.put("topic", topic);
+        entity.put("goods", goods);
+        entity.put("userHasCollect", userHasCollect);
+        return ResponseUtil.ok(entity);
     }
 
     /**
@@ -86,6 +94,6 @@ public class WxTopicController {
     @GetMapping("related")
     public Object related(@NotNull Integer id) {
         List<LitemallTopic> topicRelatedList = topicService.queryRelatedList(id, 0, 4);
-        return ResponseUtil.ok(topicRelatedList);
+        return ResponseUtil.okList(topicRelatedList);
     }
 }
